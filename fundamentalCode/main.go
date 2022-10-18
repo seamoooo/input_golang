@@ -1,38 +1,37 @@
 package main
 
 import (
-	"fmt"
-	"sort"
+	"io"
+	"log"
+	"os"
 )
 
 func main() {
-
-	type Person struct {
-		FristName string
-		LastName  string
-		Age       int
+	if len(os.Args) < 2 {
+		log.Fatalln("ファイルが指定されてません")
 	}
 
-	people := []Person{
-		{"pat", "Payyerson", 37},
-		{"tracy", "Prson", 23},
-		{"fred", "Pyerson", 14},
+	f, err := os.Open(os.Args[1])
+
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	fmt.Println("初期データ")
-	fmt.Println(people)
+	defer f.Close()
 
-	sort.Slice(people, func(i int, j int) bool {
-		return people[i].LastName < people[j].LastName
-	})
+	data := make([]byte, 2048)
 
-	fmt.Println("sort")
-	fmt.Println(people)
+	for {
+		count, err := f.Read(data)
 
-	sort.Slice(people, func(i int, j int) bool {
-		return people[i].Age < people[j].Age
-	})
+		os.Stdout.Write(data[:count])
 
-	fmt.Println("sortage")
-	fmt.Println(people)
+		if err != nil {
+			if err != io.EOF {
+				log.Fatal(err)
+			}
+
+			break
+		}
+	}
 }
