@@ -1,53 +1,38 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 func main() {
-	for i := 0; i < 10; i++ {
-		fmt.Println(i)
+
+	type Person struct {
+		FristName string
+		LastName  string
+		Age       int
 	}
 
-	st := []string{"hello", "world", "hoge"}
-	gh := [...]string{"hello", "world", "hoge"}
-
-	type grpc struct {
-		proto  string
-		method int
+	people := []Person{
+		{"pat", "Payyerson", 37},
+		{"tracy", "Prson", 23},
+		{"fred", "Pyerson", 14},
 	}
 
-	// g := grpc{
-	// 	proto:  "tcp",
-	// 	method: 3,
-	// }
+	fmt.Println("初期データ")
+	fmt.Println(people)
 
-	for i, v := range st {
-		fmt.Println(i, v)
-	}
-	for _, v := range gh {
-		fmt.Println(v)
-	}
-	//　構造体は利用不可
-	// for i, v := range g {
-	// 	fmt.Println(i, v)
-	// }
+	sort.Slice(people, func(i int, j int) bool {
+		return people[i].LastName < people[j].LastName
+	})
 
-	m := map[string]int{
-		"a": 1,
-		"b": 2,
-		"x": 3,
-	}
+	fmt.Println("sort")
+	fmt.Println(people)
 
-	// mapの取り出しは順序を保証しない
-	// hash dos の防止
-	for i, v := range m {
-		fmt.Println(i, v)
-	}
+	sort.Slice(people, func(i int, j int) bool {
+		return people[i].Age < people[j].Age
+	})
 
-	text := "i move to okinawa"
-
-	// stringは1文字ごとのruneを返す
-	// 先頭から順にアクセスする
-	for i, v := range text {
-		fmt.Println(i, v)
-	}
+	fmt.Println("sortage")
+	fmt.Println(people)
 }
