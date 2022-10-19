@@ -1,37 +1,39 @@
 package main
 
-import (
-	"io"
-	"log"
-	"os"
-)
+import "fmt"
+
+type Foo struct {
+	Filed1 string
+	Filed2 string
+}
+
+// 関数でポインタを受け取り内部で変更するとデータの流れが見えずらくなる
+func MakeFoo(f *Foo) error {
+	f.Filed1 = "val"
+	f.Filed2 = "val2"
+
+	return nil
+}
+
+// ポインタをもらわずに構造体ごと返して、呼び出し元に保存する方が良い
+func MakeFoo2() (Foo, error) {
+	f := Foo{
+		Filed1: "val",
+		Filed2: "val2",
+	}
+
+	return f, nil
+}
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatalln("ファイルが指定されてません")
+	foo := Foo{
+		Filed1: "v",
+		Filed2: "v",
 	}
 
-	f, err := os.Open(os.Args[1])
+	MakeFoo(&foo) //むやみにポインタを使用して変更しない
+	l, _ := MakeFoo2()
 
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer f.Close()
-
-	data := make([]byte, 2048)
-
-	for {
-		count, err := f.Read(data)
-
-		os.Stdout.Write(data[:count])
-
-		if err != nil {
-			if err != io.EOF {
-				log.Fatal(err)
-			}
-
-			break
-		}
-	}
+	fmt.Println(foo)
+	fmt.Println(l)
 }
