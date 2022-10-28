@@ -2,24 +2,39 @@ package main
 
 import "fmt"
 
-type Employee struct {
+type Stringfy interface {
+	ToString() string
+}
+
+type Person struct {
 	Name string
 	ID   string
 }
 
-type Manager struct {
-	Employee // 組み込みによる合成
-	Report   []Employee
+func (p Person) ToString() string {
+	return fmt.Sprintf("%v", p.Name)
+}
+
+type Dog struct {
+	Name string
+	ID   string
+}
+
+func (d Dog) ToString() string {
+	return fmt.Sprintf("%v", d.Name)
 }
 
 func main() {
-	m := Manager{
-		Employee: Employee{
-			Name: "上杉謙信",
-			ID:   "12344",
-		},
-		Report: []Employee{},
+	// 例えばfor分で各クラスごとのNameを出力したい場合など、
+	// 同じToStringを同じ形で扱うことが難しいのでinterface
+
+	// interfaceを定義すると下記のようにsliceで同じように扱うことができる
+	val := []Stringfy{
+		&Person{Name: "John", ID: "21"},
+		&Dog{Name: "dog", ID: "22"},
 	}
 
-	fmt.Println(m.Employee)
+	for _, v := range val {
+		fmt.Println(v.ToString())
+	}
 }
