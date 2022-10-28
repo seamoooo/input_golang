@@ -1,38 +1,25 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
 
-type Counter struct {
-	total       int
-	lastUpdated time.Time
+type Employee struct {
+	Name string
+	ID   string
 }
 
-// レシーバーの値を更新するためポインタレシーバーの使用
-// getterやsetterを書かフィールドに直接アクセスすることが推奨される
-func (c *Counter) Increment() {
-	c.total++
-	c.lastUpdated = time.Now()
-}
-
-// レシーバーの値がコピーされて渡される(値渡し)
-func (c Counter) String() string {
-	return fmt.Sprintf("合計:%d 更新:%v", c.total, c.lastUpdated)
+type Manager struct {
+	Employee // 組み込みによる合成
+	Report   []Employee
 }
 
 func main() {
-	var c Counter
-	fmt.Println(c.String())
+	m := Manager{
+		Employee: Employee{
+			Name: "上杉謙信",
+			ID:   "12344",
+		},
+		Report: []Employee{},
+	}
 
-	// レシーバでポインタで渡していないとエラーになるはずだが
-	// (&c).Increment()に変換される
-	c.Increment()
-	fmt.Println(c.String())
-
-	// 定義した変数から引数を渡すこともできる
-	// メソッド値
-	f1 := c.String
-	fmt.Println(f1())
+	fmt.Println(m.Employee)
 }
