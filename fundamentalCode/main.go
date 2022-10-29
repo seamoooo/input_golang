@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 
+// 具体的な実装を提供しない抽象型
 type Stringfy interface {
 	ToString() string
 }
@@ -29,6 +30,7 @@ func main() {
 	// 同じToStringを同じ形で扱うことが難しいのでinterface
 
 	// interfaceを定義すると下記のようにsliceで同じように扱うことができる
+	// 型安全のダックタイプ
 	val := []Stringfy{
 		&Person{Name: "John", ID: "21"},
 		&Dog{Name: "dog", ID: "22"},
