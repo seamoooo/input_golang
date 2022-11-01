@@ -72,6 +72,28 @@ func (s *myServer) HelloClientStream(stream hellopb.GreetingService_HelloClientS
 	}
 }
 
+func (s *myServer) HelloBiStream(stream hellopb.GreetingService_HelloBiStreamServer) error {
+	for {
+		req, err := stream.Recv()
+
+		// 終端処理
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		// エラーハンドリング
+		if err != nil {
+			return nil
+		}
+		message := fmt.Sprintf("Hello %v", req.GetName())
+
+		if err := stream.Send(&hellopb.HelloResponse{
+			Message: message,
+		}); err != nil {
+			return err
+		}
+	}
+}
+
 func NewMyServer() *myServer {
 	return &myServer{}
 }
