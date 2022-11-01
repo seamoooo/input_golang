@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -23,6 +25,8 @@ type myServer struct {
 
 // HelloRequest型のリクエストを受け取って、HelloResponse型のレスポンスを返す」Helloメソッド
 func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
+
+	// 直接HelloResponse型をretrunしている。
 	return &hellopb.HelloResponse{
 		Message: fmt.Sprintf("Hello, %s", req.GetName()),
 	}, nil
@@ -33,7 +37,6 @@ func (s *myServer) HelloServerStream(req *hellopb.HelloRequest, stream hellopb.G
 	resCount := 5
 
 	for i := 0; i < resCount; i++ {
-		// HelloはそのままHelloResponse型をretrunしている。
 		// レスポンスを返したいときには、Sendメソッドの引数にHelloResponse型を渡すことでそれがクライアントに送信
 		if err := stream.Send(&hellopb.HelloResponse{
 			Message: fmt.Sprintf("[%d] Hello, %s!", i, req.GetName()),
@@ -45,6 +48,28 @@ func (s *myServer) HelloServerStream(req *hellopb.HelloRequest, stream hellopb.G
 
 	// return文でメソッドを終了させる
 	return nil
+}
+
+func (s *myServer) HelloClientStream(stream hellopb.GreetingService_HelloClientStreamServer) error {
+	nameList := make([]string, 0)
+
+	for {
+		// 複数回のリクエストをserver側で受ける必要があるので、
+		// helloRequest型をRecvを経由して受け取る
+		req, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			message := fmt.Sprintf("hello. %v", nameList)
+
+			// SendAndCloseメソッドを呼ぶことでレスポンスを返す
+			return stream.SendAndClose(&hellopb.HelloResponse{
+				Message: message,
+			})
+		}
+		if err != nil {
+			return err
+		}
+		nameList = append(nameList, req.GetName())
+	}
 }
 
 func NewMyServer() *myServer {
