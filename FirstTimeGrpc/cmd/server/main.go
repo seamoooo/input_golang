@@ -11,8 +11,11 @@ import (
 	"os/signal"
 	"time"
 
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 
 	// https://qiita.com/fetaro/items/31b02b940ce9ec579baf
 	// 内部パッケージを呼ぶ際はgo modに記載したpfg名を利用する
@@ -26,10 +29,14 @@ type myServer struct {
 // HelloRequest型のリクエストを受け取って、HelloResponse型のレスポンスを返す」Helloメソッド
 func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
 
+	stat := status.New(codes.Unknown, "unkown error occurred")
+	stat, _ = stat.WithDetails(&errdetails.DebugInfo{
+		Detail: "detail reason of err",
+	})
+	err := stat.Err()
+
 	// 直接HelloResponse型をretrunしている。
-	return &hellopb.HelloResponse{
-		Message: fmt.Sprintf("Hello, %s", req.GetName()),
-	}, nil
+	return nil, err
 }
 
 func (s *myServer) HelloServerStream(req *hellopb.HelloRequest, stream hellopb.GreetingService_HelloServerStreamServer) error {
