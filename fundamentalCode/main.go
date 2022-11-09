@@ -3,25 +3,20 @@ package main
 import "fmt"
 
 func main() {
+	a := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
 
-	ch1 := make(chan int)
-	ch2 := make(chan int)
+	ch := make(chan int, len(a))
 
-	go func() {
-		v := 1
-		ch1 <- v
-		v2 := <-ch2
-		fmt.Print("無銘関数:", v, "", v2, "\n")
-	}()
+	for _, v := range a {
 
-	v := 2
-	var v2 int
-	// mainもランタイム開始時にゴールーチンとして起動されるので、
-	// selectを挟まないとデッドロックになる
-	select {
-	case ch2 <- v:
-	case v2 = <-ch1:
+		// goルーチンが外側の変数に依存している場合は、
+		// 変数のシャドーか引数を無銘関数に渡す必要がある
+		go func(val int) {
+			ch <- val * 2 // 引数を渡さなければここに到達する時点のvの値が幾つになっているかわからない
+		}(v)
 	}
 
-	fmt.Print("mainの最後:", v, "", v2, "\n")
+	for i := 0; i < len(a); i++ {
+		fmt.Print(<-ch, " ")
+	}
 }
