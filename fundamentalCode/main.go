@@ -1,22 +1,38 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
+func timeLimit() (int, error) {
+	var result int
+	var err error
+
+	done := make(chan struct{})
+
+	go func() {
+		reslut, err := doSomeWork()
+		if err != nil {
+			fmt.Println(reslut)
+		}
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return result, err
+	case <-time.After(2 * time.Second):
+		return 0, errors.New("timeout")
+	}
+}
+
+func doSomeWork() (result int, err error) {
+	// time.Sleep(time.Second * 10)
+	return 0, nil
+}
 
 func main() {
-	a := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
-
-	ch := make(chan int, len(a))
-
-	for _, v := range a {
-
-		// goルーチンが外側の変数に依存している場合は、
-		// 変数のシャドーか引数を無銘関数に渡す必要がある
-		go func(val int) {
-			ch <- val * 2 // 引数を渡さなければここに到達する時点のvの値が幾つになっているかわからない
-		}(v)
-	}
-
-	for i := 0; i < len(a); i++ {
-		fmt.Print(<-ch, " ")
-	}
+	fmt.Println(timeLimit())
 }
