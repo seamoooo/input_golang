@@ -1,38 +1,28 @@
 package main
 
-import (
-	"errors"
-	"fmt"
-	"time"
-)
+import "sync"
 
-func timeLimit() (int, error) {
-	var result int
-	var err error
+func processAndGather(processor func(int) int, data []int) []int {
+	num := len(data)
+	chResult := make(chan int, num)
 
-	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(num)
 
-	go func() {
-		reslut, err := doSomeWork()
-		if err != nil {
-			fmt.Println(reslut)
-		}
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		return result, err
-	case <-time.After(2 * time.Second):
-		return 0, errors.New("timeout")
+	for _, v := range data {
+		go func(v int) {
+			defer wg.Done()
+			chResult <- processor(v)
+		}(v)
 	}
-}
 
-func doSomeWork() (result int, err error) {
-	// time.Sleep(time.Second * 10)
-	return 0, nil
-}
+	wg.Wait()
+	close(chResult)
 
-func main() {
-	fmt.Println(timeLimit())
+	var result []int
+	// chResult分だけループする
+	for v := range chResult {
+		result = append(result, v)
+	}
+	return result
 }
