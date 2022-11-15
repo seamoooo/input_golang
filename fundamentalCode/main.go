@@ -1,28 +1,57 @@
 package main
 
-import "sync"
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+)
 
-func processAndGather(processor func(int) int, data []int) []int {
-	num := len(data)
-	chResult := make(chan int, num)
+var wg sync.WaitGroup
 
-	var wg sync.WaitGroup
-	wg.Add(num)
+func generator(ctx context.Context, num int) <-chan int {
+	out := make(chan int)
 
-	for _, v := range data {
-		go func(v int) {
-			defer wg.Done()
-			chResult <- processor(v)
-		}(v)
+	go func() {
+		defer wg.Done()
+
+	LOOP:
+		for {
+			select {
+			case <-ctx.Done():
+				break LOOP
+				// case out <- num: これが時間がかかっているという想定
+			}
+		}
+		close(out)
+		fmt.Printf("generator closed")
+	}()
+
+	return out
+}
+
+func main() {
+	// context.WithDeadline関数を使うことで、
+	//指定された時刻に自動的にDoneメソッドチャネルがcloseされるcontextを作成することができます。
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+	gen := generator(ctx, 1)
+
+	wg.Add(1)
+
+LOOP:
+	for i := 0; i < 5; i++ {
+		select {
+		case result, ok := <-gen:
+			if ok {
+				fmt.Println(result)
+			} else {
+				fmt.Println("timeout")
+				break LOOP
+			}
+		}
 	}
+	// すでにDoneメソッドチャネルがcloseされているときに呼ばれたら、何もしない
+	cancel()
 
 	wg.Wait()
-	close(chResult)
-
-	var result []int
-	// chResult分だけループする
-	for v := range chResult {
-		result = append(result, v)
-	}
-	return result
 }
