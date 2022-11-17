@@ -3,55 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 )
 
-var wg sync.WaitGroup
-
-func generator(ctx context.Context, num int) <-chan int {
-	out := make(chan int)
-
-	go func() {
-		defer wg.Done()
-
-	LOOP:
-		for {
-			select {
-			case <-ctx.Done():
-				break LOOP
-				// case out <- num: これが時間がかかっているという想定
-			}
-		}
-		close(out)
-		fmt.Printf("generator closed")
-	}()
-
-	return out
-}
-
 func main() {
-	// context.WithDeadline関数を使うことで、
-	//指定された時刻に自動的にDoneメソッドチャネルがcloseされるcontextを作成することができます。
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
-	gen := generator(ctx, 1)
+	ctx := context.Background()
+	fmt.Println(ctx.Deadline()) // 0001-01-01 00:00:00 +0000 UTC false
 
-	wg.Add(1)
-
-LOOP:
-	for i := 0; i < 5; i++ {
-		select {
-		case result, ok := <-gen:
-			if ok {
-				fmt.Println(result)
-			} else {
-				fmt.Println("timeout")
-				break LOOP
-			}
-		}
-	}
-	// すでにDoneメソッドチャネルがcloseされているときに呼ばれたら、何もしない
-	cancel()
-
-	wg.Wait()
+	fmt.Println(time.Now()) // 2021-08-22 20:03:53.352015 +0900 JST m=+0.000228979
+	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
+	fmt.Println(ctx.Deadline()) // 2021-08-22 20:03:55.352177 +0900 JST m=+2.000391584 true
 }
