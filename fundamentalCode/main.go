@@ -3,14 +3,49 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
+	"sync"
 )
 
-func main() {
-	ctx := context.Background()
-	fmt.Println(ctx.Deadline()) // 0001-01-01 00:00:00 +0000 UTC false
+var wg sync.WaitGroup
 
-	fmt.Println(time.Now()) // 2021-08-22 20:03:53.352015 +0900 JST m=+0.000228979
-	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
-	fmt.Println(ctx.Deadline()) // 2021-08-22 20:03:55.352177 +0900 JST m=+2.000391584 true
+func generator(ctx context.Context, num int) <-chan int {
+	out := make(chan int)
+	go func() {
+		defer wg.Done()
+
+	LOOP:
+		for {
+			select {
+			case <-ctx.Done():
+				break LOOP
+			case out <- num:
+				// outのchanにnumを格納している
+			}
+		}
+
+		close(out)
+
+		userID, authToken, traceID := ctx.Value("userID").(int), ctx.Value("authToken").(string), ctx.Value("traceID").(int)
+		fmt.Println("log: ", userID, authToken, traceID)
+		fmt.Println("generator closed")
+	}()
+	return out
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	ctx = context.WithValue(ctx, "userID", 2)
+	ctx = context.WithValue(ctx, "authToken", "xxxxxxxx")
+	ctx = context.WithValue(ctx, "traceID", 3)
+	gen := generator(ctx, 1)
+
+	wg.Add(1)
+
+	for i := 0; i < 5; i++ {
+		fmt.Println(<-gen)
+	}
+	cancel() //closeされていてもcancelはかく
+
+	wg.Wait()
 }
