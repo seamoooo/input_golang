@@ -1,51 +1,30 @@
 package main
 
-import (
-	"context"
-	"fmt"
-	"sync"
+import "fmt"
+
+type NationalRoute int
+
+const (
+	Nkaigo NationalRoute = 300
+	AKaido NationalRoute = 301
+	Bkaido NationalRoute = 302
 )
 
-var wg sync.WaitGroup
-
-func generator(ctx context.Context, num int) <-chan int {
-	out := make(chan int)
-	go func() {
-		defer wg.Done()
-
-	LOOP:
-		for {
-			select {
-			case <-ctx.Done():
-				break LOOP
-			case out <- num:
-				// outのchanにnumを格納している
-			}
-		}
-
-		close(out)
-
-		userID, authToken, traceID := ctx.Value("userID").(int), ctx.Value("authToken").(string), ctx.Value("traceID").(int)
-		fmt.Println("log: ", userID, authToken, traceID)
-		fmt.Println("generator closed")
-	}()
-	return out
+func (n NationalRoute) String() string {
+	switch n {
+	case Nkaigo:
+		return "長崎"
+	case AKaido:
+		return "阿蘇"
+	case Bkaido:
+		return "盆地"
+	default:
+		return fmt.Sprintf("国体道路")
+	}
 }
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
+	var test NationalRoute = 300
 
-	ctx = context.WithValue(ctx, "userID", 2)
-	ctx = context.WithValue(ctx, "authToken", "xxxxxxxx")
-	ctx = context.WithValue(ctx, "traceID", 3)
-	gen := generator(ctx, 1)
-
-	wg.Add(1)
-
-	for i := 0; i < 5; i++ {
-		fmt.Println(<-gen)
-	}
-	cancel() //closeされていてもcancelはかく
-
-	wg.Wait()
+	fmt.Println(test)
 }
