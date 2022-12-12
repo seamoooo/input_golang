@@ -13,6 +13,20 @@ type Book struct {
 	ISBN      string
 }
 
+// ファクトリー関数
+func NewBook(title string, author string, publisher string, day time.Time) *Book {
+	return &Book{
+		Title:     title,
+		Author:    author,
+		Publisher: publisher,
+		Day:       day,
+	}
+}
+
+func (b *Book) GetPublished() string {
+	return b.Publisher
+}
+
 func main() {
 
 	jst, _ := time.LoadLocation("Asia/Tokyo")
