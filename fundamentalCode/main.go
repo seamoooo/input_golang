@@ -1,61 +1,73 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"time"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
 )
 
-type Book struct {
-	Title     string
-	Author    string
-	Publisher string
-	Day       time.Time
-	ISBN      string
+type Warning interface {
+	Show(message string)
 }
 
-// ファクトリー関数
-func NewBook(title string, author string, publisher string, day time.Time) *Book {
-	return &Book{
-		Title:     title,
-		Author:    author,
-		Publisher: publisher,
-		Day:       day,
+type ConsoleWarning struct{}
+
+func (c ConsoleWarning) Show(message string) {
+	fmt.Fprintf(os.Stderr, "[%s]: %s\n", os.Args[0], message)
+}
+
+type DesktopWarning struct{}
+
+func (d DesktopWarning) Show(message string) {
+	fmt.Fprintf(os.Stderr, "[%s]: %s\n", os.Args[0], message)
+	// beeep.Alert(os.Args[0], message, "")
+}
+
+type SlackWarning struct {
+	URL     string
+	Channel string
+}
+
+type slackMessage struct {
+	Text      string `json:"text"`
+	Username  string `json:"username"`
+	IconEmoji string `json:"icon_emoji"`
+	Channel   string `json:"channel"`
+}
+
+func (s SlackWarning) Show(message string) {
+	params, _ := json.Marshal(slackMessage{
+		Text:      message,
+		Username:  os.Args[0],
+		IconEmoji: ":robot_face",
+		Channel:   s.Channel,
+	})
+
+	resp, err := http.PostForm(
+		s.URL,
+		url.Values{"payload": {string(params)}},
+	)
+	if err != nil {
+		io.ReadAll(resp.Body)
+		defer resp.Body.Close()
 	}
-}
-
-func (b *Book) GetPublished() string {
-	return b.Publisher
 }
 
 func main() {
+	var warn Warning
+	warn = &ConsoleWarning{}
+	warn.Show("Please slackMessage")
 
-	jst, _ := time.LoadLocation("Asia/Tokyo")
+	warn = &DesktopWarning{}
+	warn.Show("Please DKMessage")
 
-	book := Book{
-		Title:     "海の向こう",
-		Author:    "johe",
-		Publisher: "johe",
-		Day:       time.Date(2017, time.June, 14, 0, 0, 0, 0, jst),
-		ISBN:      "hogeoge",
+	warn = &SlackWarning{
+		URL:     os.Getenv("SLACK_URL"),
+		Channel: "#general",
 	}
 
-	fmt.Println(book)
-
-	b1 := new(Book)
-	var b2 Book
-	// pointerの初期化、初期値が設定できる
-	b3 := &Book{
-		Title:     "海の向こう",
-		Author:    "johe",
-		Publisher: "johe",
-		Day:       time.Date(2017, time.June, 14, 0, 0, 0, 0, jst),
-		ISBN:      "hogeoge",
-	}
-
-	fmt.Println(b1)
-	fmt.Println(b2)
-	fmt.Println(b3)
-
-	b3.Title = "丘の向こうに"
-	fmt.Println(b3)
+	warn.Show("hello world to slack")
 }
