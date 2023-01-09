@@ -1,18 +1,71 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
 
 func main() {
-	n := 13
+	intro()
 
-	_, msg := isPrime(n)
+	doneChan := make(chan bool)
 
-	fmt.Println(msg)
+	go readUserInput(doneChan)
+
+	<-doneChan
+
+	close(doneChan)
+
+	fmt.Print("goobye")
+}
+
+func readUserInput(doneChan chan bool) {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		res, done := checkNumbers(scanner)
+
+		if done {
+			doneChan <- true
+		}
+		fmt.Println(res)
+		prompt()
+	}
+}
+
+func checkNumbers(scanner *bufio.Scanner) (string, bool) {
+	scanner.Scan()
+	if strings.EqualFold(scanner.Text(), "q") {
+		return "", true
+	}
+
+	numToCheck, err := strconv.Atoi(scanner.Text())
+	if err != nil {
+		return "pleace enter number", false
+	}
+
+	_, msg := isPrime(numToCheck)
+
+	return msg, false
+}
+
+func intro() {
+	fmt.Println("Is it Prime?")
+	fmt.Println("------------")
+	fmt.Println("can quit with q")
+	prompt()
+}
+
+func prompt() {
+	fmt.Print("->")
 }
 
 func isPrime(n int) (bool, string) {
 	if n == 0 || n == 1 {
-		return false, fmt.Sprintf("%d id is not prime", n)
+		return false, fmt.Sprintf("%d is not prime", n)
 	}
 
 	if n < 0 {

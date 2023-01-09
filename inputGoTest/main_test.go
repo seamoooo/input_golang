@@ -13,6 +13,9 @@ func Test_isPrime(t *testing.T) {
 		msg      string
 	}{
 		{"prime", 7, true, "7 is a prime number"},
+		{"zoro", 0, false, "0 is not prime"},
+		{"negative", -1, false, "negative number are not prime"},
+		{"not prime", 10, false, "number is not prime"},
 	}
 
 	for _, e := range primeTests {
