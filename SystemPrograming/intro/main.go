@@ -11,6 +11,7 @@ type Greeter struct {
 	name string
 }
 
+// レシーバーに構造体を定義することによって、構造体にメソッドを定義したことになる
 func (g Greeter) Talk() {
 	fmt.Printf("hello my name id %s\n", g.name)
 }
