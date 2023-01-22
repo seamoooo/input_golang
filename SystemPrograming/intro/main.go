@@ -1,24 +1,14 @@
 package main
 
-import "fmt"
-
-// インターフェイスの定義、interfaceは構造体などの具体型が持つべきメソッドを表現するための言語機能
-type Talker interface {
-	Talk()
-}
-
-type Greeter struct {
-	name string
-}
-
-// レシーバーに構造体を定義することによって、構造体にメソッドを定義したことになる
-func (g Greeter) Talk() {
-	fmt.Printf("hello my name id %s\n", g.name)
-}
+import (
+	"bytes"
+	"fmt"
+)
 
 func main() {
-	// GreeterはTalkerインターフェイスを満たすので、インターフェイス型の変数にポインターを代入することができる
-	var talker Talker = &Greeter{"wozozo"}
+	var buffer bytes.Buffer
 
-	talker.Talk()
+	buffer.Write([]byte("hello world"))
+
+	fmt.Println(buffer.String())
 }
