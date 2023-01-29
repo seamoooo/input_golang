@@ -1,26 +1,14 @@
 package main
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
-	"io"
-	"net"
-	"net/http"
-	"os"
 )
 
 func main() {
-	//connectionを確立
-	conn, err := net.Dial("tcp", "example.com:80")
-	if err != nil {
-		panic(err)
-	}
-
-	conn.Write([]byte("GET / HTTP/1.0\r\nHost: example.com\r\n\r\n"))
-	//responseをパース
-	res, _ := http.ReadResponse(bufio.NewReader(conn), nil)
-
-	fmt.Println(res.Header)
-	defer res.Body.Close()
-	io.Copy(os.Stdout, res.Body)
+	var buffer1 bytes.Buffer
+	bytes.NewBuffer([]byte{0x10})
+	buffer3 := bytes.NewBufferString("初期文字列")
+	fmt.Println(buffer1)
+	fmt.Println(buffer3)
 }
