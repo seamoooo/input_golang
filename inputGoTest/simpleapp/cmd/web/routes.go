@@ -13,6 +13,9 @@ func (app *application) routes() http.Handler {
 	// register middleware
 	mux.Use(middleware.Recoverer)
 
+	// ipアドレスの直接リクエストでもいけるようにする
+	mux.Use(app.appIpToContext)
+
 	// register routes
 	mux.Get("/", app.Home)
 
