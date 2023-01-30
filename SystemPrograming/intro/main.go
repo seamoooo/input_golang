@@ -1,19 +1,52 @@
 package main
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
+	"os"
 )
 
-func main() {
-	data := []byte{0x0, 0x0, 0x27, 0x27}
+func dumpChunc(chunc io.Reader) {
+	var length int32
 
-	var i int32
-	var o int32
-	// byte oderはlitte edianかbig edian かを指定
-	binary.Read(bytes.NewReader(data), binary.LittleEndian, &i)
-	binary.Read(bytes.NewReader(data), binary.BigEndian, &o)
-	fmt.Printf("data: %d\n", i)
-	fmt.Printf("data: %d\n", o)
+	binary.Read(chunc, binary.BigEndian, &length)
+	buffer := make([]byte, 4)
+
+	chunc.Read(buffer)
+	fmt.Printf("chunc '%v' (%dbyte)\n", string(buffer), length)
+}
+
+func readChunks(file *os.File) []io.Reader {
+	var chunks []io.Reader
+
+	// 8
+	file.Seek(8, 0)
+	var offset int64 = 8
+
+	for {
+		var length int32
+		err := binary.Read(file, binary.BigEndian, &length)
+		if err == io.EOF {
+			break
+		}
+		chunks = append(chunks, io.NewSectionReader(file, offset, int64(length)+12))
+
+		offset, _ = file.Seek(int64(length+8), 0)
+	}
+	return chunks
+}
+
+func main() {
+	file, err := os.Open("PNG_transparency_demonstration_1.png")
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+	chunks := readChunks(file)
+
+	for _, chunk := range chunks {
+		dumpChunc(chunk)
+	}
 }
