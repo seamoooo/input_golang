@@ -1,52 +1,18 @@
 package main
 
 import (
-	"encoding/binary"
-	"fmt"
+	"bytes"
 	"io"
 	"os"
 )
 
-func dumpChunc(chunc io.Reader) {
-	var length int32
-
-	binary.Read(chunc, binary.BigEndian, &length)
-	buffer := make([]byte, 4)
-
-	chunc.Read(buffer)
-	fmt.Printf("chunc '%v' (%dbyte)\n", string(buffer), length)
-}
-
-func readChunks(file *os.File) []io.Reader {
-	var chunks []io.Reader
-
-	// 8
-	file.Seek(8, 0)
-	var offset int64 = 8
-
-	for {
-		var length int32
-		err := binary.Read(file, binary.BigEndian, &length)
-		if err == io.EOF {
-			break
-		}
-		chunks = append(chunks, io.NewSectionReader(file, offset, int64(length)+12))
-
-		offset, _ = file.Seek(int64(length+8), 0)
-	}
-	return chunks
-}
-
 func main() {
-	file, err := os.Open("PNG_transparency_demonstration_1.png")
-	if err != nil {
-		panic(err)
-	}
+	header := bytes.NewBufferString("-------header---------")
+	content := bytes.NewBufferString("-------content---------")
+	footer := bytes.NewBufferString("-------fotter---------")
 
-	defer file.Close()
-	chunks := readChunks(file)
+	reader := io.MultiReader(header, content, footer)
 
-	for _, chunk := range chunks {
-		dumpChunc(chunk)
-	}
+	io.Copy(os.Stdout, reader)
+	// -------header----------------content----------------fotter---------%
 }
