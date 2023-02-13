@@ -1,36 +1,53 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"math"
+	"io"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"strings"
 )
 
-func printNumber() chan int {
-	result := make(chan int)
-
-	go func() {
-		result <- 2
-		for i := 3; i < 100000; i += 2 {
-			l := int(math.Sqrt(float64(i)))
-			fount := false
-			for j := 3; j < l; j += 2 {
-				if i%j == 0 {
-					fount = true
-					break
-				}
-			}
-			if !fount {
-				result <- 1
-			}
-		}
-		close(result)
-	}()
-	return result
-}
-
 func main() {
-	pn := printNumber()
-	for n := range pn {
-		fmt.Println(n)
+	listener, err := net.Listen("tcp", "localhost:8080")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("server start")
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+
+		go func() {
+			fmt.Printf("Accept %v\n", conn.RemoteAddr())
+
+			request, err := http.ReadRequest(
+				bufio.NewReader(conn))
+			if err != nil {
+				panic(err)
+			}
+
+			dump, err := httputil.DumpRequest(request, true)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println(string(dump))
+
+			response := http.Response{
+				StatusCode: 200,
+				ProtoMajor: 1,
+				ProtoMinor: 0,
+				Body:       io.NopCloser(strings.NewReader("hello world\n")),
+			}
+			response.Write(conn)
+			conn.Close()
+		}()
 	}
 }
