@@ -1,53 +1,34 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
-	"net/http/httputil"
-	"strings"
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "localhost:8080")
+	fmt.Println("Server is running")
+
+	conn, err := net.ListenPacket("udp", "localhost:8888")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("server start")
+	defer conn.Close()
+
+	buffer := make([]byte, 1000)
 
 	for {
-		conn, err := listener.Accept()
+		length, remoteAddress, err := conn.ReadFrom(buffer)
 		if err != nil {
 			panic(err)
 		}
 
-		go func() {
-			fmt.Printf("Accept %v\n", conn.RemoteAddr())
+		fmt.Printf("receive from %v: %v \n", remoteAddress, length)
 
-			request, err := http.ReadRequest(
-				bufio.NewReader(conn))
-			if err != nil {
-				panic(err)
-			}
+		_, err = conn.WriteTo([]byte("hello server"), remoteAddress)
 
-			dump, err := httputil.DumpRequest(request, true)
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Println(string(dump))
-
-			response := http.Response{
-				StatusCode: 200,
-				ProtoMajor: 1,
-				ProtoMinor: 0,
-				Body:       io.NopCloser(strings.NewReader("hello world\n")),
-			}
-			response.Write(conn)
-			conn.Close()
-		}()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
