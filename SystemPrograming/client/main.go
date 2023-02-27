@@ -2,30 +2,26 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"os"
 )
 
 func main() {
-	conn, err := net.Dial("udp4", "localhost:8888")
+	dir, err := os.Open("/Users/shimohozumahozuma/project")
 	if err != nil {
 		panic(err)
 	}
 
-	defer conn.Close()
-	fmt.Println("send to request")
+	fileInfos, err := dir.Readdir(-1)
 
-	_, err = conn.Write([]byte("hello world client"))
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("recibe from srrver")
-	buffer := make([]byte, 1500)
-
-	length, err := conn.Read(buffer)
-	if err != nil {
-		panic(err)
+	for _, fileInfo := range fileInfos {
+		if fileInfo.IsDir() {
+			fmt.Printf("[Dir] %s\n", fileInfo.Name())
+		} else {
+			fmt.Printf("[%s]\n", fileInfo.Name())
+		}
 	}
-
-	fmt.Printf("recibe from %s\n", string(buffer[:length]))
 }
