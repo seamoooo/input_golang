@@ -8,9 +8,9 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
-const topicName = "projects/inputgcp2022/topics/goTest"
-const projectId = "inputgcp2022"
-const topicId = "goTest"
+const topicName = ""
+const projectId = ""
+const topicId = ""
 
 func main() {
 	ctx := context.Background()

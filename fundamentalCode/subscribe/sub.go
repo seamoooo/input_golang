@@ -9,8 +9,8 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
-const projectId = "inputgcp2022"
-const subName = "sub_pull_testtest"
+const projectId = ""
+const subName = ""
 
 func main() {
 	var mu sync.Mutex
