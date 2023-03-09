@@ -1,73 +1,37 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
+
+	"cloud.google.com/go/pubsub"
 )
 
-type Warning interface {
-	Show(message string)
-}
-
-type ConsoleWarning struct{}
-
-func (c ConsoleWarning) Show(message string) {
-	fmt.Fprintf(os.Stderr, "[%s]: %s\n", os.Args[0], message)
-}
-
-type DesktopWarning struct{}
-
-func (d DesktopWarning) Show(message string) {
-	fmt.Fprintf(os.Stderr, "[%s]: %s\n", os.Args[0], message)
-	// beeep.Alert(os.Args[0], message, "")
-}
-
-type SlackWarning struct {
-	URL     string
-	Channel string
-}
-
-type slackMessage struct {
-	Text      string `json:"text"`
-	Username  string `json:"username"`
-	IconEmoji string `json:"icon_emoji"`
-	Channel   string `json:"channel"`
-}
-
-func (s SlackWarning) Show(message string) {
-	params, _ := json.Marshal(slackMessage{
-		Text:      message,
-		Username:  os.Args[0],
-		IconEmoji: ":robot_face",
-		Channel:   s.Channel,
-	})
-
-	resp, err := http.PostForm(
-		s.URL,
-		url.Values{"payload": {string(params)}},
-	)
-	if err != nil {
-		io.ReadAll(resp.Body)
-		defer resp.Body.Close()
-	}
-}
+const topicName = "projects/inputgcp2022/topics/goTest"
+const projectId = "inputgcp2022"
+const topicId = "goTest"
 
 func main() {
-	var warn Warning
-	warn = &ConsoleWarning{}
-	warn.Show("Please slackMessage")
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, projectId)
 
-	warn = &DesktopWarning{}
-	warn.Show("Please DKMessage")
-
-	warn = &SlackWarning{
-		URL:     os.Getenv("SLACK_URL"),
-		Channel: "#general",
+	if err != nil {
+		fmt.Print("test ", err)
+		os.Exit(1)
 	}
 
-	warn.Show("hello world to slack")
+	for i := 0; i < 10; i++ {
+		t := client.Topic(topicId)
+		result := t.Publish(ctx, &pubsub.Message{
+			Data: []byte("hello"),
+		})
+
+		id, err := result.Get(ctx)
+		if err != nil {
+			fmt.Print(err)
+		}
+
+		fmt.Printf("Published a message; msg ID: %v\n", id)
+	}
 }
