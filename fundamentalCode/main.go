@@ -8,9 +8,9 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
-const topicName = ""
-const projectId = ""
-const topicId = ""
+const topicName = "projects/inputgcp2022/topics/goTest"
+const projectId = "inputgcp2022"
+const topicId = "goTest"
 
 func main() {
 	ctx := context.Background()
@@ -21,10 +21,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	id := "testtesttets"
+
 	for i := 0; i < 10; i++ {
 		t := client.Topic(topicId)
 		result := t.Publish(ctx, &pubsub.Message{
-			Data: []byte("hello"),
+			Data: []byte(id),
 		})
 
 		id, err := result.Get(ctx)

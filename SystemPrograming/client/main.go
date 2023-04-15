@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	dir, err := os.Open("")
+	dir, err := os.Open("/Users/shimohozumahozuma/project")
 	if err != nil {
 		panic(err)
 	}
